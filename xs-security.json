@@ -59,6 +59,8 @@
     ]
     ,
     "oauth2-configuration": {
-        "token-validity": 3600
+        "redirect-uris": [
+            "https://*.applicationstudio.cloud.sap/**"
+        ]
     }
 }

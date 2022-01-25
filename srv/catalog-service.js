@@ -1,16 +1,19 @@
 const debug = require('debug')('srv:catalog-service');
 const { BlobServiceClient, StorageSharedKeyCredential } = require("@azure/storage-blob");
 const xsenv = require('@sap/xsenv')
-const objectStoreConfig = xsenv.getServices({
-	objectstore: 's4h-bps-object-store'
+const credentials = xsenv.getServices({
+    objectstore: 's4h-bps-object-store'
 }).objectstore
+
+
+
 
 module.exports = cds.service.impl(async function () {
 
 
     const {
-            Sales
-          } = this.entities;
+        Sales
+    } = this.entities;
 
     this.after('READ', Sales, (each) => {
         if (each.amount > 500) {
@@ -20,7 +23,7 @@ module.exports = cds.service.impl(async function () {
             else
                 each.comments += ' ';
             each.comments += 'Exceptional!';
-            debug(each.comments, {"country": each.country, "amount": each.amount});
+            debug(each.comments, { "country": each.country, "amount": each.amount });
         } else if (each.amount < 150) {
             each.criticality = 1;
         } else {
@@ -30,35 +33,34 @@ module.exports = cds.service.impl(async function () {
 
     this.on('boost', async req => {
         try {
-            // const ID = req.params[0];
-            // const tx = cds.tx(req);
-            // await tx.update(Sales)
-            //     .with({ amount: { '+=': 250 }, comments: 'Boosted!' })
-            //     .where({ ID: { '=': ID } })
-            //     ;
-            // debug('Boosted ID:', ID);
+            console.log('========= Credentials', credentials)
 
-            //=======================================
-            const credentials = objectStoreConfig
-            const account = credentials.account_name
-            const accountKey = credentials.sas_token
-          
-            // Use StorageSharedKeyCredential with storage account and account key
-            // StorageSharedKeyCredential is only avaiable in Node.js runtime, not in browsers
-            const sharedKeyCredential = new StorageSharedKeyCredential(account, accountKey);
-
+            const sharedKeyCredential = new StorageSharedKeyCredential(credentials.account_name, credentials.sas_token);
             const blobServiceClient = new BlobServiceClient(
-                // When using AnonymousCredential, following url should include a valid SAS or support public access
-                `https://${account}.blob.core.windows.net`,
+                `https://${credentials.account_name}.blob.core.windows.net`,
                 sharedKeyCredential
-              );
+            );
 
-            let i = 1;
-            for await (const container of blobServiceClient.listContainers()) {
-                console.log(`Container ${i++}: ${container.name}`);
-            }
+            //const containerName = 'city-images';
+            const containerClient = blobServiceClient.getContainerClient(credentials.container_name);
 
-            //=======================================
+            await containerClient.setAccessPolicy('blob');
+
+            async function getAllBlobs() {
+                let blobs = [];
+                let iter = await containerClient.listBlobsFlat();
+                for await (const blob of iter) {
+                  blobs.push(blob);
+                }
+                return blobs;
+              }
+
+            const blobs = await getAllBlobs().catch(err => {
+                console.log('=====Error')
+                console.log(err)
+              });
+              console.log('=====Result')
+              console.log(blobs)
 
             return {};
         } catch (err) {
