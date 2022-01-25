@@ -1,6 +1,7 @@
 const debug = require('debug')('srv:catalog-service');
 const { BlobServiceClient, AnonymousCredential } = require("@azure/storage-blob");
 const xsenv = require('@sap/xsenv')
+const SapCfAxios = require('sap-request-helpers').default
 const credentials = xsenv.getServices({
     objectstore: 's4h-bps-object-store'
 }).objectstore
@@ -67,13 +68,14 @@ module.exports = cds.service.impl(async function () {
 
             const blobServiceClient = new BlobServiceClient(
                 // When using AnonymousCredential, following url should include a valid SAS or support public access
-                `https://${account}.blob.core.windows.net?${accountSas}`,
+                //`https://${account}.blob.core.windows.net?${accountSas}`,
+                'https://sapcpjkqynhjh3sjwtnzpcsf.blob.core.windows.net/sapcp-osaas-3247dd17-f699-4d9e-9017-9a6596a0fd49-zrs/test?sig=pnj7Ry3dDQ0Vw7Ia10WDD%2FTBv3vDFui7AHrT0MmPoTs%3D&sv=2019-02-02&spr=https&si=4919ff19-29c8-4732-9b98-371824afa8bf&sr=c',
                 new AnonymousCredential()
-              );
-              console.log("Containers:");
-              for await (const container of blobServiceClient.listContainers()) {
+            );
+            console.log("Containers:");
+            for await (const container of blobServiceClient.listContainers()) {
                 console.log(`- ${container.name}`);
-              }
+            }
 
             return {};
         } catch (err) {
@@ -94,15 +96,88 @@ module.exports = cds.service.impl(async function () {
         }
     });
 
+    this.on('callBackend', async (req) => {
+        try {
+            const input = req.data
+            const s4h = SapCfAxios(`${input.destination}`)
+            const fetchCSRFS4H = async (req) => {
+                try {
+                    let authorization
+                    if (req.headers.authorization) {
+                        console.log('=================TOKEN')
+                        console.log(req.headers.authorization)
+                        authorization = req.headers.authorization;
+                    }
+                    let response
+                    const csrf = async (req) => {
+                        response = await s4h({
+                            method: "get",
+                            url: "/SPOSEA/BPM_BO_MODEL_SRV/xSPOSEAxPROJECT",
+                            headers: {
+                                "content-type": "application/json",
+                                "X-CSRF-Token": 'Fetch',
+                                authorization
+                            }
+                        })
+                        return response
+                    }
+                    try {
+                        console.log(`------------- 1 - Fetching token ---------`)
+                        response = await csrf(req)
+                    } catch (e1) {
+                        try {
+                            console.log(`------------- 2 - Fetching token ---------`)
+                            response = await csrf(req)
+                        } catch (e2) {
+                            try {
+                                console.log(`------------- 3 - Fetching token ---------`)
+                                response = await csrf(req)
+                            } catch (e3) {
+                                try {
+                                    console.log(`------------- 4 - Fetching token ---------`)
+                                    response = await csrf(req)
+                                } catch (e4) {
+                                    console.log(`------------- 5 - Fetching token ---------`)
+                                    response = await csrf(req)
+                                }
+                            }
+                        }
+                    }
+                    return {
+                        "content-type": "application/json",
+                        "accept": "application/json",
+                        "x-csrf-token": response.headers["x-csrf-token"]
+                    }
+                } catch (error) {
+                    console.log('=====Error fetchCSRF', error.message)
+                    if (_.get(error, 'config.jar.store')) {
+                        await error.config.jar.store.removeAllCookies((err) => {
+                            console.log('=========Remove Cookies Error')
+                            console.log(error.config.jar.toJSON())
+                        })
+                    }
+                    console.log(error.config)
+                }
+            }
 
-
-
-
-
-
-
-
-
+            const headers = await fetchCSRFS4H(req)
+            let response =  await s4h({
+                method: input.methodInput,
+                url: input.URL,
+                headers,
+                data: input.dataInput
+            })
+            await response.config.jar.store.removeAllCookies((err)=>{
+                console.log('=========Remove Cookies')
+                console.log(response.config.jar.toJSON())
+             })
+        
+            return response
+        } catch (err) {
+            console.error(err);
+            return {};
+        }
+    });
 
 
     this.on('userInfo', req => {

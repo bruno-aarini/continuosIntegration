@@ -3,18 +3,7 @@ using {app.db as db} from '../db/data-model';
 using {CV_SALES, CV_SESSION_INFO} from '../db/data-model';
 
 
-
-
-
-
-
-
-
-
-
-
 service CatalogService @(path : '/catalog')
-@(requires: 'authenticated-user')
 {
     entity Sales
       @(restrict: [{ grant: ['READ'],
@@ -48,18 +37,10 @@ service CatalogService @(path : '/catalog')
       (amount: Integer)
       returns many Sales;
 
-
-
-
-
-
-
-
-
-
-
-
     type userScopes { identified: Boolean; authenticated: Boolean; Viewer: Boolean; Admin: Boolean; };
     type user { user: String; locale: String; scopes: userScopes; };
     function userInfo() returns user;
+    
+    action callBackend(destination: String, methodInput: String,  URL: String,  dataInput: LargeString) returns LargeString;
+    
 };

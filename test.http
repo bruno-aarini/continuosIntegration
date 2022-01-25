@@ -28,3 +28,13 @@ Authorization: Basic joe:
 GET http://localhost:4004/catalog/userInfo()
 Authorization: Basic joe:
 ###
+
+POST http://localhost:4004/catalog/callBackend
+Authorization: Basic joe:
+Content-Type: application/json
+
+{
+    "methodInput": "String",  
+    "URL": "String",  
+    "dataInput": "LargeString"
+}
