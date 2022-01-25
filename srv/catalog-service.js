@@ -1,5 +1,5 @@
 const debug = require('debug')('srv:catalog-service');
-const { BlobServiceClient, StorageSharedKeyCredential } = require("@azure/storage-blob");
+const { BlobServiceClient, AnonymousCredential } = require("@azure/storage-blob");
 const xsenv = require('@sap/xsenv')
 const credentials = xsenv.getServices({
     objectstore: 's4h-bps-object-store'
@@ -35,32 +35,45 @@ module.exports = cds.service.impl(async function () {
         try {
             console.log('========= Credentials', credentials)
 
-            const sharedKeyCredential = new StorageSharedKeyCredential(credentials.account_name, credentials.sas_token);
+            // const sharedKeyCredential = new StorageSharedKeyCredential(credentials.account_name, credentials.sas_token);
+            // const blobServiceClient = new BlobServiceClient(
+            //     `https://${credentials.account_name}.blob.core.windows.net`,
+            //     sharedKeyCredential
+            // );
+
+            // //const containerName = 'city-images';
+            // const containerClient = blobServiceClient.getContainerClient(credentials.container_name);
+
+            // await containerClient.setAccessPolicy('blob');
+
+            // async function getAllBlobs() {
+            //     let blobs = [];
+            //     let iter = await containerClient.listBlobsFlat();
+            //     for await (const blob of iter) {
+            //       blobs.push(blob);
+            //     }
+            //     return blobs;
+            //   }
+
+            // const blobs = await getAllBlobs().catch(err => {
+            //     console.log('=====Error')
+            //     console.log(err)
+            //   });
+            //   console.log('=====Result')
+            //   console.log(blobs)
+
+            const account = credentials.account_name
+            const accountSas = credentials.sas_token
+
             const blobServiceClient = new BlobServiceClient(
-                `https://${credentials.account_name}.blob.core.windows.net`,
-                sharedKeyCredential
-            );
-
-            //const containerName = 'city-images';
-            const containerClient = blobServiceClient.getContainerClient(credentials.container_name);
-
-            await containerClient.setAccessPolicy('blob');
-
-            async function getAllBlobs() {
-                let blobs = [];
-                let iter = await containerClient.listBlobsFlat();
-                for await (const blob of iter) {
-                  blobs.push(blob);
-                }
-                return blobs;
+                // When using AnonymousCredential, following url should include a valid SAS or support public access
+                `https://${account}.blob.core.windows.net?${accountSas}`,
+                new AnonymousCredential()
+              );
+              console.log("Containers:");
+              for await (const container of blobServiceClient.listContainers()) {
+                console.log(`- ${container.name}`);
               }
-
-            const blobs = await getAllBlobs().catch(err => {
-                console.log('=====Error')
-                console.log(err)
-              });
-              console.log('=====Result')
-              console.log(blobs)
 
             return {};
         } catch (err) {
