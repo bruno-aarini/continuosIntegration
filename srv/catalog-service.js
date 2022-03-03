@@ -37,6 +37,7 @@ const fetchCSRFS4H = async (req) => {
             response = await csrf(req)
         } catch (e1) {
             try {
+                console.log(e1.config)
                 console.log(`------------- 2 - Fetching token ---------`)
                 response = await csrf(req)
             } catch (e2) {
@@ -237,7 +238,7 @@ module.exports = cds.service.impl(async function () {
         } catch (err) {
             console.error(err.message);
             console.error(err.code);
-            console.log('======Reponse header', err.headers)
+            console.log('======Reponse config', err.config)
             return {};
         }
     });
