@@ -227,10 +227,15 @@ module.exports = cds.service.impl(async function () {
                 xsrfHeaderName: "X-CSRF-Token"
             });
            
-            console.log(response)
+            if (response && response.headers["x-csrf-token"]){
+                console.log('======Reponse code', response.code)
+                console.log('======Reponse data', response.data)
+            }
+            
             return {'response': {'data': response.data}}
         } catch (err) {
-            console.error(err);
+            console.error(err.message);
+            console.error(err.code);
             return {};
         }
     });
