@@ -38,6 +38,9 @@ const fetchCSRFS4H = async (req) => {
         } catch (e1) {
             try {
                 console.log(e1.config)
+                await e1.config.jar.store.getAllCookies((error, cookies) => {
+                    console.log('=========All coockies', cookies)
+                })
                 console.log(`------------- 2 - Fetching token ---------`)
                 response = await csrf(req)
             } catch (e2) {
@@ -239,6 +242,10 @@ module.exports = cds.service.impl(async function () {
             console.error(err.message);
             console.error(err.code);
             console.log('======Reponse config', err.config)
+            await err.config.jar.store.getAllCookies((error, cookies) => {
+                console.log('=========All coockies', cookies)
+            })
+            
             return {};
         }
     });
