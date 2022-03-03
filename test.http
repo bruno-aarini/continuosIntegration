@@ -34,6 +34,7 @@ Authorization: Basic joe:
 Content-Type: application/json
 
 {
+    "destination": "s4h_development_basic",
     "methodInput": "String",  
     "URL": "String",  
     "dataInput": "LargeString"

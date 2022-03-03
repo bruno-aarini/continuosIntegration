@@ -16,7 +16,9 @@
     "@sap/xssec": "^3",
     "debug": "^4.3",
     "express": "^4",
+    "lodash": "^4.17.21",
     "passport": "^0.4.1",
+    "sap-cf-axios": "^0.2.36",
     "sap-request-helpers": "0.0.8"
   },
   "devDependencies": {

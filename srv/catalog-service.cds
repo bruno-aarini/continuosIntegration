@@ -42,5 +42,7 @@ service CatalogService @(path : '/catalog')
     function userInfo() returns user;
     
     action callBackend(destination: String, methodInput: String,  URL: String,  dataInput: LargeString) returns LargeString;
+
+    action callBackend2(destination: String, methodInput: String,  URL: String,  dataInput: LargeString) returns LargeString;
     
 };

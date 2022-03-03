@@ -40,6 +40,8 @@ modules:
     requires:
       - name: app-uaa
       - name: app-db
+      - name: s4h-bps-dest
+      - name: s4h-bps-conn
       - name: s4h-bps-object-store
     provides:
       - name: srv-api
@@ -99,5 +101,18 @@ resources:
     type: org.cloudfoundry.existing-service
 
 
+# -------------------- DESTINATION SERVICE -------------------
+  - name: s4h-bps-dest
+# ------------------------------------------------------------
+    parameters:
+      service-plan: lite
+      service: destination
+    type: org.cloudfoundry.existing-service
 
-
+# -------------------- CONNECTION SERVICE -------------------
+  - name: s4h-bps-conn
+# -----------------------------------------------------------
+    type: org.cloudfoundry.existing-service
+    parameters:
+      service-plan: lite
+      service: connectivity
